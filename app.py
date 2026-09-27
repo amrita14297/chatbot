@@ -10,7 +10,7 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"), transport="rest")
 st.title("My Chatbot")
 
 # --- Fixed settings (not user-editable) ---
-MODEL_NAME = "gemini-3.5-flash"
+MODEL_NAME = "gemini-3.5-flash-lite"
 TEMPERATURE = 0.7
 SYSTEM_PROMPT = """You are the friendly virtual assistant for Toma Dojo - True Karate,
 a martial arts school teaching Okinawan Uechi Ryu Karate in Matthews, NC. Your school website is www.tomadojo.com.
