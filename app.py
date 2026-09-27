@@ -16,7 +16,7 @@ st.markdown(
         margin-bottom: 0.5rem;
     }
     </style>
-    <div class="bo-header">Bo — Dojo Assistant</div>
+    <div class="bo-header">Bo - Dojo Assistant</div>
     """,
     unsafe_allow_html=True,
 )
