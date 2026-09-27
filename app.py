@@ -7,7 +7,7 @@ from google.api_core.exceptions import TooManyRequests
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"), transport="rest")
 
-st.title("Bo")
+st.title("Bo — Dojo Assistant")
 
 # --- Fixed settings (not user-editable) ---
 MODEL_NAME = "gemini-3.5-flash-lite"
@@ -25,6 +25,18 @@ def start_new_chat():
     )
     st.session_state.chat = model.start_chat(history=[])
     st.session_state.messages = []
+
+    # Hidden kickoff message — generates the intro, never shown to the user
+    try:
+        intro = st.session_state.chat.send_message(
+            "Introduce yourself to a visitor who just opened the chat window. "
+            "Keep it to one short, friendly sentence."
+        )
+        intro_text = intro.text
+    except TooManyRequests:
+        intro_text = "Hi, I'm Bo! How can I help you today?"  # fallback if rate-limited
+
+    st.session_state.messages.append({"role": "assistant", "content": intro_text})
 
 # --- Init chat session once ---
 if "chat" not in st.session_state:
