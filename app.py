@@ -10,10 +10,31 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"), transport="rest")
 st.markdown(
     """
     <style>
+    /* Tighten Streamlit's default page padding for a small embedded widget */
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* Header */
     .bo-header {
         font-size: 1.3rem;
         font-weight: 700;
         margin-bottom: 0.5rem;
+    }
+
+    /* Chat message text */
+    [data-testid="stChatMessage"] p {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    /* Clear chat button — slightly smaller/tighter */
+    .stButton button {
+        font-size: 0.85rem;
+        padding: 0.25rem 0.75rem;
     }
     </style>
     <div class="bo-header">Bo - Dojo Assistant</div>
