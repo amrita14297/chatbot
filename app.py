@@ -3,8 +3,9 @@ import streamlit as st
 from dotenv import load_dotenv
 import google.generativeai as genai
 
-load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"), transport="rest")
+#load_dotenv()
+#genai.configure(api_key=os.getenv("GEMINI_API_KEY"), transport="rest")
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"], transport="rest")
 
 st.title("My Chatbot")
 
