@@ -3,44 +3,13 @@ import streamlit as st
 from dotenv import load_dotenv
 import google.generativeai as genai
 from google.api_core.exceptions import TooManyRequests
+from google.generativeai.types.generation_types import StopCandidateException
+
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"), transport="rest")
 
-st.markdown(
-    """
-    <style>
-    /* Tighten Streamlit's default page padding for a small embedded widget */
-    .block-container {
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
-    }
-
-    /* Header */
-    .bo-header {
-        font-size: 1.3rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-
-    /* Chat message text */
-    [data-testid="stChatMessage"] p {
-        font-size: 0.9rem;
-        line-height: 1.4;
-    }
-
-    /* Clear chat button — slightly smaller/tighter */
-    .stButton button {
-        font-size: 0.85rem;
-        padding: 0.25rem 0.75rem;
-    }
-    </style>
-    <div class="bo-header">Bo - Dojo Assistant</div>
-    """,
-    unsafe_allow_html=True,
-)
+st.title("Bo — Dojo Assistant")
 
 # --- Fixed settings (not user-editable) ---
 MODEL_NAME = "gemini-3.5-flash-lite"
@@ -54,7 +23,7 @@ def start_new_chat():
     model = genai.GenerativeModel(
         model_name=MODEL_NAME,
         system_instruction=SYSTEM_PROMPT,
-        generation_config={"temperature": TEMPERATURE},
+        generation_config={"temperature": TEMPERATURE, "max_output_tokens": 800},
     )
     st.session_state.chat = model.start_chat(history=[])
     st.session_state.messages = []
@@ -96,6 +65,11 @@ if user_input:
         reply_text = response.text
     except TooManyRequests:
         reply_text = "I'm getting a lot of requests right now — please try again in a moment."
+	except StopCandidateException as e:
+        finish_reason = e.args[0].finish_reason if e.args else "unknown"
+        print(f"StopCandidateException — finish_reason: {finish_reason}")  # shows in Streamlit Cloud logs
+        reply_text = "Sorry, I couldn't respond to that one — could you rephrase your question?"
+
 
     st.session_state.messages.append({"role": "assistant", "content": reply_text})
     with st.chat_message("assistant"):
