@@ -1,12 +1,13 @@
 import os
 import streamlit as st
 from dotenv import load_dotenv
-import google.generativeai as genai
-from google.api_core.exceptions import TooManyRequests
-from google.generativeai.types.generation_types import StopCandidateException
+from google import genai
+from google.genai import types
+from google.genai.errors import ClientError
+
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"), transport="rest")
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 st.markdown(
     """
@@ -63,6 +64,9 @@ a martial arts school in Matthews, NC teaching Okinawan Uechi Ryu Karate.
 - For class schedules, pricing, or trial signups you don't have exact details
   for, direct visitors to the website or to book a trial class rather than
   guessing.
+- You have access to Google Search — use it whenever a visitor asks about
+  Uechi Ryu history, karate techniques, or anything you're not fully certain
+  about, so your answer is accurate and current.
 
 ## How to behave
 - Keep answers short and conversational — 1-3 sentences unless the visitor
@@ -77,13 +81,15 @@ a martial arts school in Matthews, NC teaching Okinawan Uechi Ryu Karate.
   suggest contacting the dojo directly — don't make up details.
 """
 
+CHAT_CONFIG = types.GenerateContentConfig(
+    system_instruction=SYSTEM_PROMPT,
+    temperature=TEMPERATURE,
+    max_output_tokens=800,
+    tools=[types.Tool(google_search=types.GoogleSearch())],
+)
+
 def start_new_chat():
-    model = genai.GenerativeModel(
-        model_name=MODEL_NAME,
-        system_instruction=SYSTEM_PROMPT,
-        generation_config={"temperature": TEMPERATURE, "max_output_tokens": 800},
-    )
-    st.session_state.chat = model.start_chat(history=[])
+    st.session_state.chat = client.chats.create(model=MODEL_NAME, config=CHAT_CONFIG)
     st.session_state.messages = []
 
     # Hidden kickoff message — generates the intro, never shown to the user
@@ -93,7 +99,7 @@ def start_new_chat():
             "Keep it to one short, friendly sentence."
         )
         intro_text = intro.text
-    except TooManyRequests:
+    except ClientError:
         intro_text = "Hi, I'm Bo! How can I help you today?"  # fallback if rate-limited
 
     st.session_state.messages.append({"role": "assistant", "content": intro_text})
@@ -120,12 +126,12 @@ if user_input:
     try:
         response = st.session_state.chat.send_message(user_input)
         reply_text = response.text
-    except TooManyRequests:
-        reply_text = "I'm getting a lot of requests right now — please try again in a moment."
-    except StopCandidateException as e:
-        finish_reason = e.args[0].finish_reason if e.args else "unknown"
-        print(f"StopCandidateException — finish_reason: {finish_reason}")
-        reply_text = "Sorry, I couldn't respond to that one — could you rephrase your question?"
+    except ClientError as e:
+        if "429" in str(e):
+            reply_text = "I'm getting a lot of requests right now — please try again in a moment."
+        else:
+            print(f"ClientError: {e}")  # shows in Streamlit Cloud logs
+            reply_text = "Sorry, I couldn't respond to that one — could you rephrase your question?"
 
 
     st.session_state.messages.append({"role": "assistant", "content": reply_text})
