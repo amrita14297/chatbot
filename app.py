@@ -7,7 +7,7 @@ from google.api_core.exceptions import TooManyRequests
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"), transport="rest")
 
-st.title("Bo — Dojo Assistant")
+st.title("Bo — The Dojo Assistant")
 
 # --- Fixed settings (not user-editable) ---
 MODEL_NAME = "gemini-3.5-flash-lite"
