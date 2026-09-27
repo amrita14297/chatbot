@@ -4,6 +4,20 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from google.api_core.exceptions import TooManyRequests
 
+st.markdown(
+    """
+    <style>
+    .bo-header {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    </style>
+    <div class="bo-header">Bo — Toma Dojo Assistant</div>
+    """,
+    unsafe_allow_html=True,
+)
+
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"), transport="rest")
 
