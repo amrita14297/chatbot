@@ -14,7 +14,7 @@ MODEL_NAME = "gemini-3.5-flash-lite"
 TEMPERATURE = 0.7
 SYSTEM_PROMPT = """You are the friendly virtual assistant for Toma Dojo - True Karate,
 a martial arts school teaching Okinawan Uechi Ryu Karate in Matthews, NC. Your school website is www.tomadojo.com.
-Help visitors with questions about classes, schedules, trials, and the dojo.
+Help visitors with questions about classes, schedules, trials, and the dojo. The Owner of the Dojo is Sensei Philip Hoskins.
 Keep answers concise and welcoming."""
 
 def start_new_chat():
