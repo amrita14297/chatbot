@@ -24,7 +24,7 @@ def start_new_chat():
         generation_config={"temperature": TEMPERATURE},
     )
     st.session_state.chat = model.start_chat(history=[])
-    st.session_state.messages = ["Hi, I am Bo. How can I help"]
+    st.session_state.messages = []
 
 # --- Init chat session once ---
 if "chat" not in st.session_state:
