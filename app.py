@@ -7,7 +7,7 @@ from google.api_core.exceptions import TooManyRequests
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"), transport="rest")
 
-st.title("My Chatbot")
+st.title("Bo")
 
 # --- Fixed settings (not user-editable) ---
 MODEL_NAME = "gemini-3.5-flash-lite"
@@ -24,7 +24,7 @@ def start_new_chat():
         generation_config={"temperature": TEMPERATURE},
     )
     st.session_state.chat = model.start_chat(history=[])
-    st.session_state.messages = []
+    st.session_state.messages = ["Hi, I am Bo. How can I help"]
 
 # --- Init chat session once ---
 if "chat" not in st.session_state:
