@@ -54,8 +54,7 @@ st.markdown(
 # Display label -> model ID. First entry is the default.
 # Add more from https://ai.google.dev/gemini-api/docs/models (check exact IDs first).
 MODELS = {
-    "Gemini 3.5 Flash Lite": "gemini-3.5-flash-lite",
-    "Gemini 3.5 Flash": "gemini-3.5-flash",
+    "Gemini 3.5 Flash Lite": "gemini-3.5-flash-lite"
 }
 DEFAULT_LABEL = next(iter(MODELS))
 TEMPERATURE = 0.7
