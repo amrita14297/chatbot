@@ -39,6 +39,16 @@ st.markdown(
         min-height: 2rem;
     }
 
+    /* Disclaimer shown under the chat input */
+    [data-testid="stBottom"] > div::after {
+        content: "AI can make mistakes. Please double-check important information.";
+        display: block;
+        text-align: center;
+        font-size: 0.7rem;
+        color: #808495;
+        padding: 0.25rem 0 0.4rem;
+    }
+
     /* Clear chat button — slightly smaller/tighter */
     .stButton button {
         font-size: 0.85rem;
@@ -54,7 +64,8 @@ st.markdown(
 # Display label -> model ID. First entry is the default.
 # Add more from https://ai.google.dev/gemini-api/docs/models (check exact IDs first).
 MODELS = {
-    "Gemini 3.5 Flash Lite": "gemini-3.5-flash-lite"
+    "Gemini 3.5 Flash Lite": "gemini-3.5-flash-lite",
+    "Gemini 3.5 Flash": "gemini-3.5-flash",
 }
 DEFAULT_LABEL = next(iter(MODELS))
 TEMPERATURE = 0.7
