@@ -33,12 +33,6 @@ st.markdown(
         line-height: 1.4;
     }
 
-    /* Model selector — small and unobtrusive */
-    [data-testid="stSelectbox"] div[data-baseweb="select"] {
-        font-size: 0.8rem;
-        min-height: 2rem;
-    }
-
     /* Disclaimer shown under the chat input */
     [data-testid="stBottom"] > div::after {
         content: "AI can make mistakes. Please double-check important information.";
@@ -61,13 +55,7 @@ st.markdown(
 )
 
 # --- Fixed settings (not user-editable) ---
-# Display label -> model ID. First entry is the default.
-# Add more from https://ai.google.dev/gemini-api/docs/models (check exact IDs first).
-MODELS = {
-    "Gemini 3.5 Flash Lite": "gemini-3.5-flash-lite",
-    "Gemini 3.5 Flash": "gemini-3.5-flash",
-}
-DEFAULT_LABEL = next(iter(MODELS))
+MODEL_NAME = "gemini-3.5-flash-lite"
 TEMPERATURE = 0.7
 SYSTEM_PROMPT = """You are Bo, the friendly virtual assistant for Toma Dojo - True Karate,
 a martial arts school in Matthews, NC teaching Okinawan Uechi Ryu Karate.
@@ -100,19 +88,13 @@ a martial arts school in Matthews, NC teaching Okinawan Uechi Ryu Karate.
   suggest contacting the dojo directly — don't make up details.
 """
 
-def start_new_chat(model_id, history=None):
+def start_new_chat():
     model = genai.GenerativeModel(
-        model_name=model_id,
+        model_name=MODEL_NAME,
         system_instruction=SYSTEM_PROMPT,
         generation_config={"temperature": TEMPERATURE, "max_output_tokens": 800},
     )
-    st.session_state.chat = model.start_chat(history=history or [])
-    st.session_state.active_model = model_id
-
-    # Switching models mid-conversation: keep the visible messages and skip the intro
-    if history is not None:
-        return
-
+    st.session_state.chat = model.start_chat(history=[])
     st.session_state.messages = []
 
     # Hidden kickoff message — generates the intro, never shown to the user
@@ -129,28 +111,19 @@ def start_new_chat(model_id, history=None):
 
 # --- Init chat session once ---
 if "chat" not in st.session_state:
-    start_new_chat(MODELS[DEFAULT_LABEL])
+    start_new_chat()
 
 # --- Clear chat button ---
 if st.button("Clear chat"):
-    start_new_chat(MODELS[st.session_state.get("model_label", DEFAULT_LABEL)])
+    start_new_chat()
     st.rerun()
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- Model selector (sits just above the chat input) ---
-st.selectbox(
-    "Model",
-    list(MODELS.keys()),
-    key="model_label",
-    label_visibility="collapsed",
-)
-chosen_id = MODELS[st.session_state.model_label]
-if chosen_id != st.session_state.active_model:
-    # Rebuild the chat on the new model, carrying over the conversation so far
-    start_new_chat(chosen_id, history=st.session_state.chat.history)
+# --- Model in use (sits just above the chat input) ---
+st.caption(f"Model: {MODEL_NAME}")
 
 user_input = st.chat_input("Say something...")
 
