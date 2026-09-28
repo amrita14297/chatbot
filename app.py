@@ -1,8 +1,4 @@
 import os
-import re
-from urllib.parse import urljoin, urlparse
-import requests
-from bs4 import BeautifulSoup
 import streamlit as st
 from dotenv import load_dotenv
 import google.generativeai as genai
@@ -61,7 +57,7 @@ st.markdown(
 # --- Fixed settings (not user-editable) ---
 MODEL_NAME = "gemini-3.5-flash-lite"
 TEMPERATURE = 0.7
-BASE_PROMPT = """You are Bo, the friendly virtual assistant for Toma Dojo - True Karate,
+SYSTEM_PROMPT = """You are Bo, the friendly virtual assistant for Toma Dojo - True Karate,
 a martial arts school in Matthews, NC teaching Okinawan Uechi Ryu Karate.
 
 ## What you know
@@ -91,91 +87,6 @@ a martial arts school in Matthews, NC teaching Okinawan Uechi Ryu Karate.
   events), say so honestly and point them to the website, Facebook page, or
   suggest contacting the dojo directly — don't make up details.
 """
-
-# --- Website knowledge (read from the live site, refreshed hourly) ---
-SITE_URL = "https://www.tomadojo.com"
-# Pages to try even if the homepage doesn't link to them (missing pages are skipped)
-EXTRA_PAGES = ["schedule", "instructors", "events", "gallery", "start-trial", "uechi-ryu"]
-MAX_PAGES = 15
-MAX_SITE_CHARS = 40000
-SKIP_EXT = (".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".pdf", ".ico", ".css", ".js")
-
-
-def _clean_page(html, keep_footer=False):
-    """Turn a page's HTML into plain text (drops scripts, nav menus and repeated footers)."""
-    soup = BeautifulSoup(html, "html.parser")
-    for tag in soup(["script", "style", "noscript", "iframe", "svg", "nav"]):
-        tag.decompose()
-    if not keep_footer:
-        for tag in soup.find_all("footer"):
-            tag.decompose()
-    # Keep the address of outside links (Facebook, Instagram, ...) so Bo can share them
-    for a in soup.find_all("a", href=True):
-        href = a["href"]
-        if href.startswith("http") and "tomadojo.com" not in href:
-            a.append(f" ({href})")
-    text = soup.get_text("\n", strip=True)
-    return re.sub(r"\n{3,}", "\n\n", text)
-
-
-@st.cache_data(ttl=3600, show_spinner=False)
-def load_site_content():
-    """Fetch the site's pages as plain text. Returns '' if the site can't be reached."""
-    try:
-        home = requests.get(SITE_URL, timeout=10)
-        home.raise_for_status()
-    except requests.RequestException:
-        return ""
-
-    def norm(u):
-        return u.split("#")[0].split("?")[0].rstrip("/")
-
-    def is_home(u):
-        return u in (SITE_URL, SITE_URL + "/home")
-
-    host = urlparse(SITE_URL).netloc.replace("www.", "")
-    soup = BeautifulSoup(home.text, "html.parser")
-    candidates = [urljoin(SITE_URL + "/", a["href"]) for a in soup.find_all("a", href=True)]
-    candidates += [f"{SITE_URL}/{p}" for p in EXTRA_PAGES]
-
-    urls = []
-    for u in map(norm, candidates):
-        same_site = urlparse(u).netloc.replace("www.", "") == host
-        if same_site and not is_home(u) and not u.lower().endswith(SKIP_EXT) and u not in urls:
-            urls.append(u)
-
-    home_text = _clean_page(home.text, keep_footer=True)
-    seen = {home_text}
-    blocks = [f"### PAGE: {SITE_URL}/home\n{home_text}"]
-    for u in urls[:MAX_PAGES]:
-        try:
-            r = requests.get(u, timeout=10)
-        except requests.RequestException:
-            continue
-        if r.status_code != 200 or "text/html" not in r.headers.get("Content-Type", ""):
-            continue
-        text = _clean_page(r.text)
-        if text and text not in seen:  # skips "not found" pages that return the homepage
-            seen.add(text)
-            blocks.append(f"### PAGE: {u}\n{text}")
-    return "\n\n".join(blocks)[:MAX_SITE_CHARS]
-
-
-SITE_CONTENT = load_site_content()
-SYSTEM_PROMPT = BASE_PROMPT
-if SITE_CONTENT:
-    SYSTEM_PROMPT += f"""
-## Website content
-Below is the current text of the Toma Dojo website. Treat it as your main source
-of truth for anything about the dojo (classes, schedule, instructors, events,
-pricing, contact details, policies). Answer specific questions from it accurately,
-and mention the relevant page (for example www.tomadojo.com/schedule) when helpful.
-If something isn't covered here, say you don't have that detail and point them to
-the website, Facebook page, or suggest contacting the dojo directly - never guess.
-
-{SITE_CONTENT}
-"""
-
 
 def start_new_chat():
     model = genai.GenerativeModel(
